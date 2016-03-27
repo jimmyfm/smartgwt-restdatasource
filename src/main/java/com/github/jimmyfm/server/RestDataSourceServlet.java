@@ -1,0 +1,87 @@
+package com.github.jimmyfm.server;
+
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.json.JSONTokener;
+
+public class RestDataSourceServlet extends HttpServlet
+{
+
+	private static final long serialVersionUID = 1L;
+
+	@Override
+	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException
+	{
+		JSONObject jso = new JSONObject(new JSONTokener(req.getInputStream()));
+		if (jso.has("transaction"))
+		{
+			JSONArray res = new JSONArray();
+			jso = jso.getJSONObject("transaction");
+			JSONArray jsa = jso.getJSONArray("operations");
+			for (int i = 0; i < jsa.length(); i++)
+			{
+				JSONObject opResult = executeOperation(jsa.getJSONObject(i), resp);
+				res.put(opResult);
+			}
+			resp.getOutputStream().write(res.toString().getBytes());
+		}
+		else
+		{
+			JSONObject res = executeOperation(jso, resp);
+			resp.getOutputStream().write(res.toString().getBytes());
+		}
+	}
+
+	private JSONObject executeOperation(JSONObject jso, HttpServletResponse resp) throws IOException
+	{
+		String dataSource = jso.getString("dataSource");
+
+		Pattern pattern = Pattern.compile("(([a-zA-Z0-9]*_)+)([a-zA-Z0-9]*)");
+		Matcher match = pattern.matcher(dataSource);
+		boolean b = match.matches();
+		if (!b)
+		{
+			throw new RuntimeException("Wrong DS ID");
+		}
+
+		dataSource = this.getClass().getPackage().getName() + "." + dataSource.replace('_', '.');
+
+		try
+		{
+			Class<?> dsClass = Class.forName(dataSource);
+
+			String operationType = jso.getString("operationType");
+			if ("custom".equals(operationType))
+			{
+				operationType = jso.getString("operationId");
+			}
+
+			Method m = dsClass.getMethod(operationType, JSONObject.class);
+			Object o = m.invoke(null, jso);
+			return JSONObject.class.cast(o);
+		}
+		catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | ClassNotFoundException e)
+		{
+			e.printStackTrace();
+		}
+
+		return null;
+	}
+
+	@Override
+	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException
+	{
+
+	}
+}
