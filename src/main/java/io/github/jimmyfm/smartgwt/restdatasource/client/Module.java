@@ -1,4 +1,4 @@
-package com.github.jimmyfm.client;
+package io.github.jimmyfm.smartgwt.restdatasource.client;
 
 import java.util.Date;
 
@@ -14,24 +14,21 @@ import com.smartgwt.client.types.Autofit;
 import com.smartgwt.client.types.Overflow;
 import com.smartgwt.client.types.RowEndEditAction;
 import com.smartgwt.client.widgets.IButton;
-import com.smartgwt.client.widgets.events.ClickEvent;
-import com.smartgwt.client.widgets.events.ClickHandler;
 import com.smartgwt.client.widgets.grid.ListGrid;
 import com.smartgwt.client.widgets.grid.ListGridRecord;
 import com.smartgwt.client.widgets.layout.VLayout;
 import com.smartgwt.client.widgets.toolbar.ToolStrip;
 
-public class Module implements EntryPoint, DSLoadedHandler
-{
+public class Module implements EntryPoint, DSLoadedHandler {
 
 	private ListGrid ls;
 
-	public static final native void log(Object o)/*-{
+	public static final native void log(Object... o)/*-{
 		console.log(o);
 	}-*/;
 
-	public void onModuleLoad()
-	{
+	@Override
+	public void onModuleLoad() {
 		VLayout verticalLayout = new VLayout();
 		verticalLayout.setWidth100();
 		verticalLayout.setHeight100();
@@ -59,98 +56,65 @@ public class Module implements EntryPoint, DSLoadedHandler
 		verticalLayout.addMember(ls);
 
 		IButton loadDefinitionsBtn = new IButton("Load Definitions");
-		loadDefinitionsBtn.addClickHandler(new ClickHandler()
-		{
-			public void onClick(ClickEvent event)
-			{
-				DSLoader.load("ea_MyDataSource", Module.this);
-			}
+		loadDefinitionsBtn.addClickHandler((e) -> {
+			DSLoader.load("restDataSource", Module.this);
 		});
 		toolStrip.addMember(loadDefinitionsBtn);
 		toolStrip.addFill();
 
 		IButton loadDataBtn = new IButton("Load Data");
-		loadDataBtn.addClickHandler(new ClickHandler()
-		{
-			public void onClick(ClickEvent event)
-			{
-				ls.invalidateCache();
-				Criteria crit = new Criteria();
-				crit.addCriteria("booleanCrit", false);
-				crit.addCriteria("dateCrit", new Date());
-				crit.addCriteria("StringCriteria", "value");
-				ls.fetchData(crit);
-			}
+		loadDataBtn.addClickHandler((e) -> {
+			ls.invalidateCache();
+			Criteria crit = new Criteria();
+			crit.addCriteria("booleanCrit", false);
+			crit.addCriteria("dateCrit", new Date());
+			crit.addCriteria("StringCriteria", "value");
+			ls.fetchData(crit);
 		});
 		toolStrip.addMember(loadDataBtn);
 		toolStrip.addFill();
 
 		IButton saveChangesBtn = new IButton("Save Changes");
-		saveChangesBtn.addClickHandler(new ClickHandler()
-		{
-			public void onClick(ClickEvent event)
-			{
-				ls.saveAllEdits();
-			}
-		});
+		saveChangesBtn.addClickHandler((e) -> ls.saveAllEdits());
 		toolStrip.addMember(saveChangesBtn);
 		toolStrip.addFill();
 
 		IButton addNewBtn = new IButton("Add New");
-		addNewBtn.addClickHandler(new ClickHandler()
-		{
-			public void onClick(ClickEvent event)
-			{
-				ls.startEditingNew();
-			}
-		});
+		addNewBtn.addClickHandler((e) -> ls.startEditingNew());
 		toolStrip.addMember(addNewBtn);
 		toolStrip.addFill();
 
-
 		IButton deleteSelectedBtn = new IButton("Delete Selected");
-		deleteSelectedBtn.addClickHandler(new ClickHandler()
-		{
-			public void onClick(ClickEvent event)
-			{
-				ListGridRecord[] selectedRecords = ls.getSelectedRecords();
-				boolean wasQueuing = RPCManager.startQueue();
-				for (ListGridRecord rec : selectedRecords)
-				{
-					ls.removeData(rec);
-				}
-				if (!wasQueuing)
-				{
-					RPCManager.sendQueue();
-				}
+		deleteSelectedBtn.addClickHandler((e) -> {
+			ListGridRecord[] selectedRecords = ls.getSelectedRecords();
+			boolean wasQueuing = RPCManager.startQueue();
+			for (ListGridRecord rec : selectedRecords) {
+				ls.removeData(rec);
+			}
+			if (!wasQueuing) {
+				RPCManager.sendQueue();
 			}
 		});
 		toolStrip.addMember(deleteSelectedBtn);
 		toolStrip.addFill();
 
 		IButton customOpButton = new IButton("Custom Operation");
-		customOpButton.addClickHandler(new ClickHandler()
-		{
-			public void onClick(ClickEvent event)
-			{
-				Record data = new Record();
-				data.setAttribute("attribute", "value");
-				DSCallback callback = new DSCallback()
-				{
+		customOpButton.addClickHandler((e) -> {
+			Record data = new Record();
+			data.setAttribute("attribute", "value");
+			DSCallback callback = new DSCallback() {
 
-					@Override
-					public void execute(DSResponse dsResponse, Object data, DSRequest dsRequest)
-					{
-						log("CustomOP Callback");
-						log(dsResponse);
-						log(data);
-						log(dsRequest);
-					}
-				};
-				DSRequest requestProperties = new DSRequest();
-				requestProperties.setAttribute("requestPropertiesAttr", "value");
-				ls.getDataSource().performCustomOperation("customOperation", data, callback, requestProperties);
-			}
+				@Override
+				public void execute(DSResponse dsResponse, Object data, DSRequest dsRequest) {
+					log("CustomOP Callback");
+					log(dsResponse);
+					log(data);
+					log(dsRequest);
+				}
+			};
+			DSRequest requestProperties = new DSRequest();
+			requestProperties.setAttribute("requestPropertiesAttr", "value");
+			ls.getDataSource().performCustomOperation("customOperation", data, callback, requestProperties);
 		});
 		toolStrip.addMember(customOpButton);
 
@@ -158,8 +122,7 @@ public class Module implements EntryPoint, DSLoadedHandler
 	}
 
 	@Override
-	public void onDSLoaded(RestDataSource dataSource)
-	{
+	public void onDSLoaded(RestDataSource dataSource) {
 		ls.setDataSource(dataSource);
 	}
 }

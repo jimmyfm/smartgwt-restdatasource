@@ -6,6 +6,7 @@ import org.json.JSONObject;
 import com.smartgwt.client.types.DSProtocol;
 import com.smartgwt.client.types.FieldType;
 
+// Commented out old code
 public class MyDataSource
 {
 	public final static JSONObject define(JSONObject query)

@@ -1,18 +1,13 @@
-# GWT Base Project
+# SmartGWT Rest Data Source
 
-That's just a simple and plain set of clean project that I use as a base for tech tests and demos.
+The idea is to create a back-end for [SmartGWT RestDataSource](http://www.smartclient.com/smartgwt/javadoc/com/smartgwt/client/data/RestDataSource.html).
 
-It uses **GWT 2.7.0** because if you are going to write real-world stuff, that's what you're going to use.
+Would be optimal to have a solution working both with Super Dev Mode and a JavaEE container.
 
-You can easily run it with 
-```sh
-mvn gwt:run
-```
+Would be great to be able to use @Path annotation and leverage jackson for objects to json conversion. 
 
-Or if you need to run a compiled version (like i had to)
-```sh
-mvn jetty:run-war
-```
+## Notes
 
-## Packages
-* **master** Vanilla GWT 2.7.0
+Jetty as configured in Super Dev Mode does not support @Path annotation, we will need to make some magic to make something working both ways.
+
+[https://www.eclipse.org/jetty/documentation/current/using-annotations.html](https://www.eclipse.org/jetty/documentation/current/using-annotations.html)

@@ -1,4 +1,4 @@
-package com.github.jimmyfm.client;
+package io.github.jimmyfm.smartgwt.restdatasource.client;
 
 import com.smartgwt.client.data.RestDataSource;
 
